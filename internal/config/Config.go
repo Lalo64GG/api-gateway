@@ -3,7 +3,16 @@ package config
 import (
 	"os"
 	"strings"
+	"time"
 )
+
+type RateLimitConfig struct {
+	MaxRequests     int
+	RefillRate      float64
+	CleanupInterval time.Duration
+	IPTimeout       time.Duration
+}
+
 
 type Config struct {
 	ServerHost string
@@ -17,6 +26,8 @@ type Config struct {
 	JWTSecret string
 
 	Environment string
+
+	RateLimit RateLimitConfig
 }
 
 
@@ -32,6 +43,12 @@ func New() *Config{
 		CorsAllowedOrigins: strings.Split(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:3000"), ","),
 		JWTSecret:         getEnv("JWT_SECRET", "your-secret-key"),
 		Environment:        getEnv("ENVIRONMENT", "development"),
+		RateLimit: RateLimitConfig{
+			MaxRequests:     10,  // Maximum requests in bucket
+			RefillRate:      0.1667, // 1 request every 6 seconds (10 request/minute)
+			CleanupInterval: 5 * time.Minute, // Cleanup interval 5 minutes
+			IPTimeout:       10 * time.Minute, // Delete IP after 10 minutes of inactivity
+		},
 	}
 }
 
